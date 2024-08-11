@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema({
   lastName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   countryCode: { type: String, required: true },
-  phoneNum: { type: Number, required: true },
+  mobileNum: { type: String, required: true },
   password: { type: String, required: true },
   dateOfBirth: { type: Date, required: true },
   gender: {
@@ -19,11 +19,13 @@ const userSchema = new mongoose.Schema({
     enum: ["male", "female", "both", "other"],
   },
   profilePictureUrl: { type: String },
+  country: {type:String},
+  state: {type:String},
+  city: {type:String},
   bio: { type: String },
   location: {
-    country: { type: String },
-    state: { type: String },
-    city: { type: String },
+    latitude: { type: Number },
+    longitude: { type: Number }
   },
   interests: [{ type: String }],
   lookingFor: {
