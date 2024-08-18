@@ -124,68 +124,91 @@ const Signup: React.FC = () => {
     },
   });
 
-  const handleCountryChange = async (event:any) => {
+  const handleCountryChange = async (event: any) => {
     const countryCode = event.target.value;
     setSelectedCountry(countryCode);
+    formik.setFieldValue("country", countryCode);
     fetchStates(countryCode);
-    // await setStates(fetchStates(countryCode));
     setSelectedState("");
     setCities([]);
   };
 
-  const handleStateChange = async (event:any) => {
+  const handleStateChange = async (event: any) => {
     const stateCode = event.target.value;
     setSelectedState(stateCode);
-    setCities(await fetchCities(stateCode));
+    formik.setFieldValue("state", stateCode);
+    fetchCities(stateCode);
+  };
+
+  const handleCityChange = (event: any) => {
+    const cityCode = event.target.value;
+    formik.setFieldValue("city", cityCode);
   };
 
   useEffect(() => {
-    // Define an async function to fetch countries
     const fetchCountries = async () => {
       try {
-        const response = await fetch("https://restcountries.com/v3.1/all");
+        const response = await fetch(
+          "https://api.countrystatecity.in/v1/countries",
+          {
+            headers: {
+              "X-CSCAPI-KEY": `${process.env.NEXT_PUBLIC_API_TOKEN}`,
+            },
+          }
+        );
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
         const data = await response.json();
         setCountries(data);
-        console.log(data);
       } catch (error) {
         console.error("Error fetching countries:", error);
       }
     };
 
-    // Call the async function
     fetchCountries();
   }, []);
 
   const fetchStates = async (countryCode: string) => {
     try {
-      const response = await fetch(`https://example-api.com/states?country=${countryCode}`);
-      
+      const response = await fetch(
+        `https://api.countrystatecity.in/v1/countries/${countryCode}/states`,
+        {
+          headers: {
+            "X-CSCAPI-KEY": `${process.env.NEXT_PUBLIC_API_TOKEN}`,
+          },
+        }
+      );
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-  
       const data = await response.json();
-      // Set the states data to your state
       setStates(data);
-      console.log(data);
-      
     } catch (error) {
       console.error("Error fetching states:", error);
     }
   };
 
-  const fetchCities = async (stateCode:any) => {
+  const fetchCities = async (stateCode: string) => {
     try {
       const response = await fetch(
-        `http://api.geonames.org/search?adminCode1=${stateCode}&username=YOUR_GEONAMES_USERNAME`
+        `https://api.countrystatecity.in/v1/countries/${selectedCountry}/states/${stateCode}/cities`,
+        {
+          headers: {
+            "X-CSCAPI-KEY": `${process.env.NEXT_PUBLIC_API_TOKEN}`,
+          },
+        }
       );
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
       const data = await response.json();
-      return data.geonames || [];
+      setCities(data);
     } catch (error) {
       console.error("Error fetching cities:", error);
-      return [];
     }
   };
+
 
   return (
     <ThemeProvider theme={defaultTheme}>
@@ -225,10 +248,11 @@ const Signup: React.FC = () => {
                   mt: 1,
                   display: "grid",
                   gridTemplateColumns: {
-                    xs: "repeat(2, 1fr)",
+                    xs: "repeat(1, 1fr)",
                     sm: "repeat(3, 1fr)",
                   },
                   gap: "16px",
+                  margin: "0 auto"
                 }}
               >
                 <TextField
@@ -400,99 +424,80 @@ const Signup: React.FC = () => {
                   )}
                 </FormControl>
 
-                <FormControl
-                  fullWidth
-                  margin="normal"
-                  error={
-                    formik.touched.country && Boolean(formik.errors.country)
-                  }
+                <FormControl fullWidth margin="normal">
+                <InputLabel id="country-label">Country</InputLabel>
+                <Select
+                  labelId="country-label"
+                  id="country"
+                  name="country"
+                  value={formik.values.country}
+                  onChange={handleCountryChange}
+                  input={<OutlinedInput label="Country" />}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.country && Boolean(formik.errors.country)}
                 >
-                  <InputLabel id="country-label">Country</InputLabel>
-                  <Select
-                    labelId="country-label"
-                    id="country"
-                    name="country"
-                    input={<OutlinedInput label="Country" />}
-                    value={formik.values.country}
-                    onChange={(event) => {
-                      formik.handleChange(event);
-                      handleCountryChange(event);
-                    }}
-                    onBlur={formik.handleBlur}
-                  >
-                    {countries.map((country: any) => (
-                      <MenuItem key={country.cca3} value={country.cca3}>
-                        {country.name.common}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  {formik.touched.country && formik.errors.country && (
-                    <Typography variant="body2" color="error">
-                      {formik.errors.country}
-                    </Typography>
-                  )}
-                </FormControl>
-
-                {/* State Selector */}
-                <FormControl
-                  fullWidth
-                  margin="normal"
+                  {countries?.map((country:any) => (
+                    <MenuItem key={country.iso2} value={country.iso2}>
+                      {country.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {formik.touched.country && formik.errors.country && (
+                  <Typography variant="caption" color="error">
+                    {formik.errors.country}
+                  </Typography>
+                )}
+              </FormControl>
+              <FormControl fullWidth margin="normal">
+                <InputLabel id="state-label">State</InputLabel>
+                <Select
+                  labelId="state-label"
+                  id="state"
+                  name="state"
+                  value={formik.values.state}
+                  onChange={handleStateChange}
+                  input={<OutlinedInput label="State" />}
+                  onBlur={formik.handleBlur}
                   error={formik.touched.state && Boolean(formik.errors.state)}
+                  disabled={!states.length}
                 >
-                  <InputLabel id="state-label">State</InputLabel>
-                  <Select
-                    labelId="state-label"
-                    id="state"
-                    name="state"
-                    value={formik.values.state}
-                    onChange={(event) => {
-                      formik.handleChange(event);
-                      handleStateChange(event);
-                    }}
-                    onBlur={formik.handleBlur}
-                    disabled={!selectedCountry}
-                  >
-                    {states?.map((state: any) => (
-                      <MenuItem key={state.code} value={state.code}>
-                        {state.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  {formik.touched.state && formik.errors.state && (
-                    <Typography variant="body2" color="error">
-                      {formik.errors.state}
-                    </Typography>
-                  )}
-                </FormControl>
-
-                {/* City Selector */}
-                <FormControl
-                  fullWidth
-                  margin="normal"
+                  {states.map((state:any) => (
+                    <MenuItem key={state.iso2} value={state.iso2}>
+                      {state.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {formik.touched.state && formik.errors.state && (
+                  <Typography variant="caption" color="error">
+                    {formik.errors.state}
+                  </Typography>
+                )}
+              </FormControl>
+              <FormControl fullWidth margin="normal">
+                <InputLabel id="city-label">City</InputLabel>
+                <Select
+                  labelId="city-label"
+                  id="city"
+                  name="city"
+                  value={formik.values.city}
+                  onChange={handleCityChange}
+                  input={<OutlinedInput label="City" />}
+                  onBlur={formik.handleBlur}
                   error={formik.touched.city && Boolean(formik.errors.city)}
+                  disabled={!cities.length}
                 >
-                  <InputLabel id="city-label">City</InputLabel>
-                  <Select
-                    labelId="city-label"
-                    id="city"
-                    name="city"
-                    value={formik.values.city}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    disabled={!selectedState}
-                  >
-                    {cities.map((city: any) => (
-                      <MenuItem key={city.geonameId} value={city.name}>
-                        {city.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  {formik.touched.city && formik.errors.city && (
-                    <Typography variant="body2" color="error">
-                      {formik.errors.city}
-                    </Typography>
-                  )}
-                </FormControl>
+                  {cities.map((city:any) => (
+                    <MenuItem key={city.name} value={city.name}>
+                      {city.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {formik.touched.city && formik.errors.city && (
+                  <Typography variant="caption" color="error">
+                    {formik.errors.city}
+                  </Typography>
+                )}
+              </FormControl>
 
                 <TextField
                   margin="normal"
@@ -539,12 +544,12 @@ const Signup: React.FC = () => {
               <FormControlLabel
                 control={<Checkbox value="allowExtraEmails" color="primary" />}
                 label="I want to receive inspiration, marketing promotions and updates via email."
+                sx={{display:"block"}}
               />
               <Button
                 type="submit"
-                fullWidth
                 variant="contained"
-                sx={{ mt: 3, mb: 2 }}
+                sx={{ mt: 3, mb: 2,width:"300px" }}
               >
                 Sign Up
               </Button>

@@ -1,0 +1,45 @@
+.tinder-carousel {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+  }
+  
+  .swipe {
+    position: absolute;
+  }
+  
+  .card {
+    width: 300px;
+    height: 400px;
+    background-size: cover;
+    background-position: center;
+    border-radius: 20px;
+    box-shadow: 0px 18px 30px -10px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  
+  .card h3 {
+    color: white;
+    margin-bottom: 10px;
+    font-size: 24px;
+    text-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+  }
+
+  .swipe-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 64px;
+    opacity: 0.8;
+  }
+  
+  .like-icon {
+    color: green;
+  }
+  
+  .dislike-icon {
+    color: red;
+  }
